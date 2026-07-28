@@ -166,69 +166,89 @@ export class PolynomialNotation extends Notation {
         let bottomExps = (value.gte(this.maxSingleTerm)) ? value.slog(this._value, 100, true).sub(this.maxSingleTerm.slog(this._value, 100, true)).plus(1).floor().max(0) : Decimal.dZero;
         if (bottomExps.lt(9e15)) {
             value = value.iteratedlog(this._value, bottomExps.toNumber(), true);
-        let currentValue = value;
-        let bottom = value.mul(this.precision);
-        let roundingMultiple = (this.minimumTerm.eq(-Infinity)) ? Decimal.dZero : (typeof this.minimumTermRounding == "function") ? this.minimumTermRounding(value.mod(this._value.pow(this.minimumTerm))) : toDecimal(this.minimumTermRounding);
-        currentValue = round(currentValue, (this.minimumTerm.eq(-Infinity)) ? Decimal.dZero : this._value.pow(this.minimumTerm).mul(roundingMultiple));
-        let termsSoFar = 0;
-        let maxTerms = (currentValue.lt(this.maxMultiTerm)) ? this._maxTerms : 1;
-        let power = currentValue.log(this._value).floor().plus(1);
-        while (termsSoFar < maxTerms && (currentValue.gte(bottom) || this.showZeroTerms > 0)) {
-            termsSoFar++;
-            let coefficient : Decimal;
-            let powerNum : Decimal;
-            if (this.showZeroTerms >= 0) {
-                power = power.sub(1);
-                powerNum = this._value.pow(power);
-                coefficient = currentValue.div(powerNum);
-            }
-            else {
-                [coefficient, power] = scientifify(currentValue, this._value);
-                powerNum = this._value.pow(power);
-            }
-            if (power.lt(this.minimumTerm)) {
-                power = this.minimumTerm;
-                powerNum = this._value.pow(power);
-                coefficient = currentValue.div(powerNum);
-            }
-            if (value.lt(this.maxMultiTerm) && power.gt(this.minimumTerm)) coefficient = coefficient.floor();
-            else coefficient = round(coefficient, this.minimumTermRounding);
-            let subresult = "";
-            if (power.eq(0)) subresult = this.constantStrings[0] + this.innerNotation.format(coefficient) + this.constantStrings[1];
-            else {
-                let reciprocal = false;
-                if (this.fractionInverse && power.lt(0)) {
-                    reciprocal = true;
-                    power = power.abs();
+            let currentValue = value;
+            let bottom = value.mul(this.precision);
+            let roundingMultiple = (this.minimumTerm.eq(-Infinity)) ? Decimal.dZero : (typeof this.minimumTermRounding == "function") ? this.minimumTermRounding(value.mod(this._value.pow(this.minimumTerm))) : toDecimal(this.minimumTermRounding);
+            currentValue = round(currentValue, (this.minimumTerm.eq(-Infinity)) ? Decimal.dZero : this._value.pow(this.minimumTerm).mul(roundingMultiple));
+            let termsSoFar = 0;
+            let maxTerms = (currentValue.lt(this.maxMultiTerm)) ? this._maxTerms : 1;
+            let power = currentValue.log(this._value).floor().plus(1);
+            let termList : [Decimal, Decimal][] = [];
+            while (termsSoFar < maxTerms && (currentValue.gte(bottom) || this.showZeroTerms > 0)) {
+                termsSoFar++;
+                let coefficient : Decimal;
+                let powerNum : Decimal;
+                if (this.showZeroTerms >= 0) {
+                    power = power.sub(1);
+                    powerNum = this._value.pow(power);
+                    coefficient = currentValue.div(powerNum);
                 }
-                let powerString = "";
-                if (this.formatExponents != 0 && (this.unitPowerShown || power.neq(1))) {
-                    if (this.formatExponents > 0) powerString = this.format(power);
-                    else powerString = this.innerNotation.format(power);
-                    if (this.parenthesizePower > 0 || (this.parenthesizePower == 0 && power.abs().gte(this._value) && this.formatExponents > 0)) powerString = "(" + powerString + ")";
-                    powerString = this.powerStrings[0] + powerString + this.powerStrings[1];
+                else {
+                    [coefficient, power] = scientifify(currentValue, this._value);
+                    powerNum = this._value.pow(power);
                 }
-                powerString = baseString + powerString;
-                let coefficientString = "";
-                if (coefficient.neq(1) || ((this.unitCoefficientShown[0] && !reciprocal) || (this.unitCoefficientShown[1] && reciprocal))) {
-                    coefficientString = this.innerNotation.format(coefficient);
-                    coefficientString = this.coefficientStrings[0] + coefficientString + this.coefficientStrings[1];
+                if (power.lt(this.minimumTerm)) {
+                    power = this.minimumTerm;
+                    powerNum = this._value.pow(power);
+                    coefficient = currentValue.div(powerNum);
                 }
-                subresult = powerString;
-                let usedSign = (reciprocal) ? this.divisionSign : this.multiplicationSign;
-                if (coefficientString) {
-                    if (this.multiplicationBefore) subresult = coefficientString + usedSign + powerString;
-                    else subresult = powerString + usedSign + coefficientString;
+                if (value.lt(this.maxMultiTerm) && power.gt(this.minimumTerm)) coefficient = coefficient.floor();
+                else coefficient = round(coefficient, this.minimumTermRounding);
+                termList.push([power, coefficient]);
+                if (power.lte(this.minimumTerm)) break;
+                currentValue = currentValue.sub(powerNum.mul(coefficient));
+            }
+            let correctionIndex = termList.length - 1;
+            while (correctionIndex >= 0) {
+                if (termList[correctionIndex][1].gte(this._value)) {
+                    let nextCoeff = termList[correctionIndex][1].div(this._value).floor();
+                    let remainingCoeff = termList[correctionIndex][1].sub(nextCoeff.mul(this._value));
+                    termList.splice(correctionIndex, 1, [termList[correctionIndex][0].plus(1), nextCoeff], [termList[correctionIndex][0], remainingCoeff]);
+                    if (remainingCoeff.eq(0) && this.showZeroTerms <= 0 && (this.showZeroTerms < 0 || correctionIndex+1 == termList.length - 1)) termList.splice(correctionIndex+1, 1);
+                }
+                else if (correctionIndex > 0 && termList[correctionIndex][0].eq(termList[correctionIndex - 1][0])) {
+                    termList.splice(correctionIndex - 1, 2, [termList[correctionIndex][0], termList[correctionIndex][1].plus(termList[correctionIndex - 1][1])]);
+                    correctionIndex--;
+                }
+                else correctionIndex--;
+            }
+            for (let term = 0; term < termList.length; term++) {
+                let subresult = "";
+                power = termList[term][0];
+                let coefficient = termList[term][1];
+                if (power.eq(0)) subresult = this.constantStrings[0] + this.innerNotation.format(coefficient) + this.constantStrings[1];
+                else {
+                    let reciprocal = false;
+                    if (this.fractionInverse && power.lt(0)) {
+                        reciprocal = true;
+                        power = power.abs();
+                    }
+                    let powerString = "";
+                    if (this.formatExponents != 0 && (this.unitPowerShown || power.neq(1))) {
+                        if (this.formatExponents > 0) powerString = this.format(power);
+                        else powerString = this.innerNotation.format(power);
+                        if (this.parenthesizePower > 0 || (this.parenthesizePower == 0 && power.abs().gte(this._value) && this.formatExponents > 0)) powerString = "(" + powerString + ")";
+                        powerString = this.powerStrings[0] + powerString + this.powerStrings[1];
+                    }
+                    powerString = baseString + powerString;
+                    let coefficientString = "";
+                    if (coefficient.neq(1) || ((this.unitCoefficientShown[0] && !reciprocal) || (this.unitCoefficientShown[1] && reciprocal))) {
+                        coefficientString = this.innerNotation.format(coefficient);
+                        coefficientString = this.coefficientStrings[0] + coefficientString + this.coefficientStrings[1];
+                    }
+                    subresult = powerString;
+                    let usedSign = (reciprocal) ? this.divisionSign : this.multiplicationSign;
+                    if (coefficientString) {
+                        if (this.multiplicationBefore) subresult = coefficientString + usedSign + powerString;
+                        else subresult = powerString + usedSign + coefficientString;
+                    }
+                }
+                result += subresult;
+                if (term < termList.length - 1) {
+                    if (negative) result += this.subtractionSign;
+                    else result += this.additionSign;
                 }
             }
-            result += subresult;
-            if (power.lte(this.minimumTerm)) break;
-            currentValue = currentValue.sub(powerNum.mul(coefficient));
-            if (termsSoFar < maxTerms && (currentValue.gt(bottom) || this.showZeroTerms > 0)) {
-                if (negative) result += this.subtractionSign;
-                else result += this.additionSign;
-            }
-        }
         }
         if (bottomExps.gt(0) && bottomExps.lte(this.maxExps)) {
             result = this.expStrings[0][0] + result + this.expStrings[0][1];

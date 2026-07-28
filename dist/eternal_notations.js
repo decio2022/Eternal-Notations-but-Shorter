@@ -2794,7 +2794,7 @@
           this.infinityString = "Infinite";
           this.negativeInfinityString = null;
           this.NaNString = "???";
-          this.isInfinite = (decimal) => (decimal.eq(Decimal.dInf) || decimal.eq(Decimal.dNegInf));
+          this.isInfinite = (decimal) => (decimal.abs().gt("(e^1.797693134862210227e+308)1"));
           this.name = "";
       }
       //Notation stuff
@@ -2830,7 +2830,7 @@
        * @param infinityString A string or undefined. If this is a string, this becomes what the notation returns for positive infinities ("Infinite" by default). The infinity string is unaltered if this is undefined.
        * @param negativeInfinityString A string, null, or undefined. If this is a string, this becomes what the notation returns for negative infinities. If this is null, then negative infinities use negativeString and infinityString concatenated (this is the default behavior). The negative infinity string is unaltered if this is undefined.
        * @param NaNString A string or undefined. If this is a string, this becomes what the notation returns for NaN ("???" by default). The NaN string is unaltered if this is undefined.
-       * @param isInfinite A Decimal => boolean function, or undefined. If this is a function, then that function is what tests if a number is considered infinite (the default is (decimal.eq(Decimal.dInf) || decimal.eq(Decimal.dNegInf)), which means "only return true if the Decimal is actually infinite", but by changing this function, this can be changed to, say, mark anything above 2^1024 as infinite). The infinite-checking function is unaltered if this is undefined.
+       * @param isInfinite A Decimal => boolean function, or undefined. If this is a function, then that function is what tests if a number is considered infinite (the default is (decimal.abs().gt("(e^1.797693134862210227e+308)1")), which means "only return true if the Decimal is actually infinite or so close to infinity that Decimal.slog() would treat it as infinite", but by changing this function, this can be changed to, say, mark anything above 2^1024 as infinite). The infinite-checking function is unaltered if this is undefined.
        */
       setNotationGlobals(negativeString, infinityString, negativeInfinityString, NaNString, isInfinite) {
           if (negativeString !== undefined)
@@ -11647,6 +11647,7 @@
               let termsSoFar = 0;
               let maxTerms = (currentValue.lt(this.maxMultiTerm)) ? this._maxTerms : 1;
               let power = currentValue.log(this._value).floor().plus(1);
+              let termList = [];
               while (termsSoFar < maxTerms && (currentValue.gte(bottom) || this.showZeroTerms > 0)) {
                   termsSoFar++;
                   let coefficient;
@@ -11669,7 +11670,31 @@
                       coefficient = coefficient.floor();
                   else
                       coefficient = round(coefficient, this.minimumTermRounding);
+                  termList.push([power, coefficient]);
+                  if (power.lte(this.minimumTerm))
+                      break;
+                  currentValue = currentValue.sub(powerNum.mul(coefficient));
+              }
+              let correctionIndex = termList.length - 1;
+              while (correctionIndex >= 0) {
+                  if (termList[correctionIndex][1].gte(this._value)) {
+                      let nextCoeff = termList[correctionIndex][1].div(this._value).floor();
+                      let remainingCoeff = termList[correctionIndex][1].sub(nextCoeff.mul(this._value));
+                      termList.splice(correctionIndex, 1, [termList[correctionIndex][0].plus(1), nextCoeff], [termList[correctionIndex][0], remainingCoeff]);
+                      if (remainingCoeff.eq(0) && this.showZeroTerms <= 0 && (this.showZeroTerms < 0 || correctionIndex + 1 == termList.length - 1))
+                          termList.splice(correctionIndex + 1, 1);
+                  }
+                  else if (correctionIndex > 0 && termList[correctionIndex][0].eq(termList[correctionIndex - 1][0])) {
+                      termList.splice(correctionIndex - 1, 2, [termList[correctionIndex][0], termList[correctionIndex][1].plus(termList[correctionIndex - 1][1])]);
+                      correctionIndex--;
+                  }
+                  else
+                      correctionIndex--;
+              }
+              for (let term = 0; term < termList.length; term++) {
                   let subresult = "";
+                  power = termList[term][0];
+                  let coefficient = termList[term][1];
                   if (power.eq(0))
                       subresult = this.constantStrings[0] + this.innerNotation.format(coefficient) + this.constantStrings[1];
                   else {
@@ -11704,10 +11729,7 @@
                       }
                   }
                   result += subresult;
-                  if (power.lte(this.minimumTerm))
-                      break;
-                  currentValue = currentValue.sub(powerNum.mul(coefficient));
-                  if (termsSoFar < maxTerms && (currentValue.gt(bottom) || this.showZeroTerms > 0)) {
+                  if (term < termList.length - 1) {
                       if (negative)
                           result += this.subtractionSign;
                       else
@@ -16184,8 +16206,8 @@
   PresetAssembly.SI = new NestedSINotation(...[, , , ,], defaultRound).setName("SI");
   PresetAssembly.SIWritten = new NestedSINotation(10, [["quetta", 30], ["ronna", 27], ["yotta", 24], ["zetta", 21], ["exa", 18], ["peta", 15], ["tera", 12], ["giga", 9], ["mega", 6], ["kilo", 3]], [["quecto", 30], ["ronto", 27], ["yocto", 24], ["zepto", 21], ["atto", 18], ["femto", 15], ["pico", 12], ["nano", 9], ["micro", 6], ["milli", 3]], true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]).setName("SI (Written)");
   PresetAssembly.MixedSI = new ScientificNotation(1e33, ...[, , , ,], true, ...[, , , , , ,], new ConditionalNotation(false, [new NestedSINotation(...[, , , ,], defaultRound), (value) => value.lt(1e33)], [new ScientificNotation(), (value) => true])).setName("Mixed SI");
-  PresetAssembly.BinarySI = new NestedSINotation(2, [["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]], "/", true, defaultRound).setName("Binary SI");
-  PresetAssembly.BinarySIWritten = new NestedSINotation(2, [["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]], "/", true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]).setName("Binary SI (Written)");
+  PresetAssembly.BinarySI = new NestedSINotation(2, [["Qi", 100], ["Ri", 90], ["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]], "/", true, defaultRound).setName("Binary SI");
+  PresetAssembly.BinarySIWritten = new NestedSINotation(2, [["quebi", 100], ["robi", 90], ["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]], "/", true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]).setName("Binary SI (Written)");
   PresetAssembly.CombinedD = new NestedSINotation(10, [["D", 33], ["N", 30], ["O", 27], ["Sp", 24], ["Sx", 21], ["Qi", 18], ["Qa", 15], ["T", 12], ["B", 9], ["M", 6]], "/", true, defaultRound, 2, 3, 0, 0, "", "*").setName("Combined-D");
   PresetAssembly.HyperSI = new NestedHyperSINotation(...[, , , ,], defaultRound).setName("Hyper-SI");
   PresetAssembly.HyperSIWritten = new NestedHyperSINotation(10, [["deckerexi-", 10], ["tenebexi-", 9], ["cloctexi-", 8], ["hypocexi-", 7], ["alifexi-", 6], ["madenexi-", 5], ["swekexi-", 4], ["brinexi-", 3], ["digexi-", 2], ["plexi-", 1]], [["nepogo-", 2], ["logo-", 1]], true, defaultRound, 2, 0, " ", "", ["^(", ")"]).setName("Hyper-SI (Written)");
@@ -16207,8 +16229,8 @@
   HTMLPresetAssembly.SI = new NestedSINotation(...[, , , ,], defaultRound).setName("SI");
   HTMLPresetAssembly.SIWritten = new NestedSINotation(10, [["quetta", 30], ["ronna", 27], ["yotta", 24], ["zetta", 21], ["exa", 18], ["peta", 15], ["tera", 12], ["giga", 9], ["mega", 6], ["kilo", 3]], [["quecto", 30], ["ronto", 27], ["yocto", 24], ["zepto", 21], ["atto", 18], ["femto", 15], ["pico", 12], ["nano", 9], ["micro", 6], ["milli", 3]], true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]).setName("SI (Written)");
   HTMLPresetAssembly.MixedSI = new ScientificNotation(1e33, ...[, , , ,], true, ...[, , , , , ,], new ConditionalNotation(false, [new NestedSINotation(...[, , , ,], defaultRound), (value) => value.lt(1e33)], [new ScientificNotation(), (value) => true])).setName("Mixed SI");
-  HTMLPresetAssembly.BinarySI = new NestedSINotation(2, [["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]], "/", true, defaultRound).setName("Binary SI");
-  HTMLPresetAssembly.BinarySIWritten = new NestedSINotation(2, [["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]], "/", true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]).setName("Binary SI (Written)");
+  HTMLPresetAssembly.BinarySI = new NestedSINotation(2, [["Qi", 100], ["Ri", 90], ["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]], "/", true, defaultRound).setName("Binary SI");
+  HTMLPresetAssembly.BinarySIWritten = new NestedSINotation(2, [["quebi", 100], ["robi", 90], ["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]], "/", true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]).setName("Binary SI (Written)");
   HTMLPresetAssembly.CombinedD = new NestedSINotation(10, [["D", 33], ["N", 30], ["O", 27], ["Sp", 24], ["Sx", 21], ["Qi", 18], ["Qa", 15], ["T", 12], ["B", 9], ["M", 6]], "/", true, defaultRound, 2, 3, 0, 0, "", "*").setName("Combined-D");
   HTMLPresetAssembly.HyperSI = new NestedHyperSINotation(...[, , , ,], defaultRound).setName("Hyper-SI");
   HTMLPresetAssembly.HyperSIWritten = new NestedHyperSINotation(10, [["deckerexi-", 10], ["tenebexi-", 9], ["cloctexi-", 8], ["hypocexi-", 7], ["alifexi-", 6], ["madenexi-", 5], ["swekexi-", 4], ["brinexi-", 3], ["digexi-", 2], ["plexi-", 1]], [["nepogo-", 2], ["logo-", 1]], true, defaultRound, 2, 0, " ", "", ["^(", ")"]).setName("Hyper-SI (Written)");
@@ -17088,6 +17110,7 @@
   exports.polygonRoot = polygonRoot;
   exports.primeFactorize = primeFactorize;
   exports.primeFactorizeFraction = primeFactorizeFraction;
+  exports.round = round;
   exports.scientifify = scientifify;
   exports.toDecimal = toDecimal;
   exports.triPolygon = triPolygon;

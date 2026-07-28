@@ -355,12 +355,12 @@ PresetAssembly.SIWritten = new NestedSINotation(
 PresetAssembly.MixedSI = new ScientificNotation(1e33, ...[,,,,], true, ...[,,,,,,], new ConditionalNotation(false, [new NestedSINotation(...[,,,,], defaultRound), (value) => value.lt(1e33)], [new ScientificNotation(), (value) => true])).setName("Mixed SI");
 PresetAssembly.BinarySI = new NestedSINotation(
     2,
-    [["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]],
+    [["Qi", 100], ["Ri", 90], ["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]],
     "/", true, defaultRound
 ).setName("Binary SI");
 PresetAssembly.BinarySIWritten = new NestedSINotation(
     2,
-    [["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]],
+    [["quebi", 100], ["robi", 90], ["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]],
     "/",
     true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]
 ).setName("Binary SI (Written)");
@@ -427,12 +427,12 @@ HTMLPresetAssembly.SIWritten = new NestedSINotation(
 HTMLPresetAssembly.MixedSI = new ScientificNotation(1e33, ...[,,,,], true, ...[,,,,,,], new ConditionalNotation(false, [new NestedSINotation(...[,,,,], defaultRound), (value) => value.lt(1e33)], [new ScientificNotation(), (value) => true])).setName("Mixed SI");
 HTMLPresetAssembly.BinarySI = new NestedSINotation(
     2,
-    [["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]],
+    [["Qi", 100], ["Ri", 90], ["Yi", 80], ["Zi", 70], ["Ei", 60], ["Pi", 50], ["Ti", 40], ["Gi", 30], ["Mi", 20], ["Ki", 10]],
     "/", true, defaultRound
 ).setName("Binary SI");
 HTMLPresetAssembly.BinarySIWritten = new NestedSINotation(
     2,
-    [["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]],
+    [["quebi", 100], ["robi", 90], ["yobi", 80], ["zebi", 70], ["exbi", 60], ["pebi", 50], ["tebi", 40], ["gibi", 30], ["mebi", 20], ["kibi", 10]],
     "/",
     true, defaultRound, 2, 3, 0, 0, " ", "", [["^(", ")"], ["^^(", ")"]]
 ).setName("Binary SI (Written)");

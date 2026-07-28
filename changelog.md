@@ -2,6 +2,9 @@
 
 ### v1.1.x
 
+v1.1.2 (July 27, 2026): Changed the BinarySI presets to include robi and quebi. Fixed a couple bugs with Polynomial notation, and changed the default
+isInfinite function so that numbers so close to infinite that Decimal.slog returns Infinity on them are treated as Infinity.
+
 v1.1.1 (October 19, 2024): Fixed a bug with Weak Hyperscientific notation at F9e15.
 
 v1.1.0 (August 15, 2024): Added 16 notations (MultibaseLogarithm, MultibaseMultiLogarithm, PentaScientific, PentaScientificIterations, PentaLogarithm, MultiPentaLogarithm, PentaRoot, MultiPentaRoot, IncreasingPentaRoot, WeakHyperscientific, WeakHyperscientificIterations, IncreasingFunction, IncreasingFunctionScientific, IncreasingFunctionProduct, FastGrowingHierarchy, OmegaMetaZero), 21 presets (BinaryIL, MixedSI, CookieFonsterExtendedSI, Alphaquint, HypersplitBase2, PentaSquareRoot, Tripentated, PentaRoot, WeakHyperscientific, SuperSquareScientific, ExponentTower, ExponentTowerK, PsiLettersBinary, PsiDashBinary, FastGrowingHierarchy, HardyHierarchy, TritetratedProduct, Parentheses, OmegaMetaZero, OmegaMetaZeroAlphaAmount, FillingFractions), and 21 utility functions (multibaseLogarithm, weak_tetrate, weak_slog, weak_hyperscientifify, pentascientifify, increasingFunctionScientifify, increasingScientififyFunction, FGH0, FGH0inverse, FGH1, FGH1inverse, iteratedFGH1, iteratedFGH1log, FGH2, FGH2inverse, iteratedFGH2, iteratedFGH2log, FGH3, FGH3inverse, iteratedFGH3, iteratedFGH3log). PsiDash notation now allows base 2, and fixed Polynomial running slowly. (break_eternity v2.1.0 is now required)

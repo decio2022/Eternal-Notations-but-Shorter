@@ -1,7 +1,7 @@
-let continuousStatus = 0;
+let workerStatus = 0;
 let continuousIteration = 0;
-let continuousTimer;
-let continuousWorker;
+let workerTimer;
+let presetWorker;
 let continuousErrors = [];
 
 window.addEventListener('keydown', (e) => {
@@ -17,7 +17,8 @@ let specialValues = [
 
 // test_preset("HardyHierarchy");
 // test_PhysicalScale()
-continuousPresetTest();
+// continuousPresetTest();
+testAllOnNum(new Decimal("(e^1.797693134862210228e+308)-1"), true, true);
 
 function test_preset(name, ...args) {
     let TextPreset = (name == "ColoredDominoes") ? null : EternalNotations.Presets[name];
@@ -117,7 +118,7 @@ function test_PhysicalScale() {
  * Runs testAll continuously, logging any "this notation crashes/hangs" errors it finds. Uses a Worker to ensure truly asynchronous running of the presets, so even if a preset hangs, it will be detected rather than killing the program.
  */
 async function continuousPresetTest() {
-    while (continuousStatus != -1) {
+    while (workerStatus != -1) {
         let decimalSize = Math.floor(Math.random() * 8);
         let negative = (Math.random() > 0.5);
         let recip = (Math.random() > 0.5);
@@ -131,22 +132,50 @@ async function continuousPresetTest() {
         if (recip) testedDecimal = testedDecimal.recip();
         if (negative) testedDecimal = testedDecimal.neg();
         testedDecimal = testedDecimal.toString();
-        continuousWorker = new Worker("./preset_testing_worker.js");
-        continuousWorker.onmessage = function(e) { if (continuousStatus == 0) continuousStatus = 1; }
-        continuousWorker.onerror = function(e) { continuousStatus = -2; }
-        continuousWorker.postMessage(testedDecimal);
-        continuousTimer = setTimeout(function(){continuousStatus = -1;}, 5000);
-        while (continuousStatus == 0) {
+        presetWorker = new Worker("./preset_testing_worker.js");
+        presetWorker.onmessage = function(e) { if (workerStatus == 0) workerStatus = 1; }
+        presetWorker.onerror = function(e) { workerStatus = -2; }
+        presetWorker.postMessage(testedDecimal);
+        workerTimer = setTimeout(function(){workerStatus = -1;}, 5000);
+        while (workerStatus == 0) {
             await new Promise(resolve => setTimeout(resolve, 1));
         }
-        continuousWorker.terminate();
-        clearTimeout(continuousTimer);
-        if (continuousStatus < 0) {
-            console.log("A failure occured while testing " + testedDecimal + ", of type " + continuousStatus);
+        presetWorker.terminate();
+        clearTimeout(workerTimer);
+        if (workerStatus < 0) {
+            console.log("A failure occured while testing " + testedDecimal + ", of type " + workerStatus);
             continuousErrors.push(testedDecimal);
         }
-        continuousStatus = 0;
+        workerStatus = 0;
         if (continuousIteration % 250 == 0) console.log(continuousIteration + " tests run.")
         continuousIteration++;
+    }
+}
+
+async function testAllOnNum(num, htmlUsed = true, exclude_slow = false) {
+    for (k in EternalNotations.HTMLPresets) {
+        // Fast-Growing Hierarchy, Polygonal, and Prestige Layer notations run a little too slowly for my tastes. Excluding them should make this run much faster.
+        presetWorker = new Worker("./test_one_preset_worker.js");
+        let formatted = "";
+        presetWorker.onmessage = function(e) { 
+            if (workerStatus == 0) workerStatus = 1;
+            formatted = e.data;
+        }
+        presetWorker.onerror = function(e) { workerStatus = -2; }
+        presetWorker.postMessage([num, k, htmlUsed]);
+        workerTimer = setTimeout(function(){workerStatus = -1;}, 5000);
+        while (workerStatus == 0) {
+            await new Promise(resolve => setTimeout(resolve, 1));
+        }
+        presetWorker.terminate();
+        clearTimeout(workerTimer);
+        if (workerStatus < 0) {
+            console.log("A failure occured while testing " + k + ", of type " + workerStatus);
+            continuousErrors.push(k);
+        }
+        else {
+            if (formatted !== "Function notation") console.log(k + ": " + formatted);
+        }
+        workerStatus = 0;
     }
 }

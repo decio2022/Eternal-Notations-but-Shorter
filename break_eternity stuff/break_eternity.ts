@@ -1824,6 +1824,16 @@ export default class Decimal {
     } else if (COMMAS_ARE_DECIMAL_POINTS) {
       value = value.replace(",", ".");
     }
+	
+	if (value.toLowerCase() === 'nan') {
+	  return this.fromDecimal(Decimal.dNaN);
+	}
+	if (value.toLowerCase() === 'infinity') {
+	  return this.fromDecimal(Decimal.dInf);
+	}
+	if (value.toLowerCase() === '-infinity') {
+	  return this.fromDecimal(Decimal.dNegInf);
+	}
 
     //Handle x^^^y format. Note that no linearhyper5 parameter is needed, as pentation has no analytic approximation.
     const pentationparts = value.split("^^^");
@@ -2001,8 +2011,9 @@ export default class Decimal {
       }
     } else if (ecount === 1) {
       //Very small numbers ("2e-3000" and so on) may look like valid floats but round to 0.
+	  //Additionally, small numbers (like 1e-308) look like valid floats but are starting to lose precision.
       const numberAttempt = parseFloat(value);
-      if (isFinite(numberAttempt) && numberAttempt !== 0) {
+      if (isFinite(numberAttempt) && Math.abs(numberAttempt) > 1e-307) {
         this.fromNumber(numberAttempt);
         if (Decimal.fromStringCache.maxSize >= 1) {
           Decimal.fromStringCache.set(originalValue, Decimal.fromDecimal(this));
