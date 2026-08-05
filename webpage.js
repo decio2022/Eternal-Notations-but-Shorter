@@ -61,7 +61,7 @@ function formatOne(key, num) {
     catch { return; }
     try {
         if (typeof notation == "function") {
-            else if (key == "Polynomial" || key == "RationalFunction") {
+            if (key == "Polynomial" || key == "RationalFunction") {
                 document.getElementById("display_" + key + 10).innerHTML = notation(10).name + ": " + notation(10).format(num);
                 document.getElementById("display_" + key + 2).innerHTML = notation(2).name + ": " + notation(2).format(num);
                 document.getElementById("display_" + key + 3).innerHTML = notation(3).name + ": " + notation(3).format(num);
