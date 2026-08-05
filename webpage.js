@@ -61,7 +61,18 @@ function formatOne(key, num) {
     catch { return; }
     try {
         if (typeof notation == "function") {
-            if (key == "Polynomial" || key == "RationalFunction") {
+            if (key == "SimplifiedWritten") {
+                notation = notation(10);
+            }
+            else if (key == "ColoredDominoes") {
+                for (let i = 6; i < 21; i += 3) {
+                    document.getElementById("display_ColoredDominoes" + i).innerHTML = notation(i).name + ": " + notation(i).format(num);
+                }
+                let endTime = performance.now();
+                if (consoleLogging) console.log("All colored Dominoes: (" + (endTime - startTime).toString() + " ms)")
+                return;
+            }
+            else if (key == "Polynomial" || key == "RationalFunction") {
                 document.getElementById("display_" + key + 10).innerHTML = notation(10).name + ": " + notation(10).format(num);
                 document.getElementById("display_" + key + 2).innerHTML = notation(2).name + ": " + notation(2).format(num);
                 document.getElementById("display_" + key + 3).innerHTML = notation(3).name + ": " + notation(3).format(num);
