@@ -76,6 +76,12 @@ function formatOne(key, num) {
                 document.getElementById("display_" + key + 10).innerHTML = notation(10).name + ": " + notation(10).format(num);
                 document.getElementById("display_" + key + 2).innerHTML = notation(2).name + ": " + notation(2).format(num);
                 document.getElementById("display_" + key + 3).innerHTML = notation(3).name + ": " + notation(3).format(num);
+                document.getElementById("display_" + key + 4).innerHTML = notation(4).name + ": " + notation(4).format(num);
+                document.getElementById("display_" + key + 5).innerHTML = notation(5).name + ": " + notation(5).format(num);
+                document.getElementById("display_" + key + 6).innerHTML = notation(6).name + ": " + notation(6).format(num);
+                document.getElementById("display_" + key + 7).innerHTML = notation(7).name + ": " + notation(7).format(num);
+                document.getElementById("display_" + key + 8).innerHTML = notation(8).name + ": " + notation(8).format(num);
+                document.getElementById("display_" + key + 9).innerHTML = notation(9).name + ": " + notation(9).format(num);
                 let endTime = performance.now();
                 if (consoleLogging && key == "Polynomial") console.log("All three Polynomials: (" + (endTime - startTime).toString() + " ms)");
                 if (consoleLogging && key == "RationalFunction") console.log("All three Rational Functions: (" + (endTime - startTime).toString() + " ms)");
