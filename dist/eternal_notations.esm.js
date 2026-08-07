@@ -16303,6 +16303,8 @@ PresetAssembly.Alphaquint = new AppliedFunctionNotation(value => value.mul(1 + 1
 }), undefined, 100, value => false, value => true, (current, total) => Decimal.div(total, current).gte(5 ** 19), 5, "", ["", ""], Decimal.pow(5, 8353082582), value => Decimal.pow(5, value), false, "eee16", value => Decimal.tetrate(5, value.toNumber(), 1, true), false, true, [["B^", ""], ["B^", ""], ["[", "] "]], undefined, 0, ...[, , , ,], null, undefined, 1, ["/", ""])).setName("Alphaquint");
 PresetAssembly.Hypersplit = new HypersplitNotation(...[, , , , , , ,], defaultRound).setName("Hypersplit");
 HTMLPresetAssembly.Hypersplit = new HypersplitNotation(...[, , , , , , ,], defaultRound).setName("Hypersplit");
+PresetAssembly.HypersplitBase4 = new HypersplitNotation([["", ""], ["*4^", ""], ["((4^)^", ") "], ["((4^^)^", ") "]], 4, [4, 4, 4], ...[, , , ,], defaultRound).setName("Hypersplit (Base 4)");
+HTMLPresetAssembly.HypersplitBase4 = new HypersplitNotation([["", ""], ["*4^", ""], ["((4^)^", ") "], ["((4^^)^", ") "]], 4, [4, 4, 4], ...[, , , ,], defaultRound).setName("Hypersplit (Base 4)");
 PresetAssembly.HypersplitBase3 = new HypersplitNotation([["", ""], ["*3^", ""], ["((3^)^", ") "], ["((3^^)^", ") "]], 3, [3, 3, 3], ...[, , , ,], defaultRound).setName("Hypersplit (Base 3)");
 HTMLPresetAssembly.HypersplitBase3 = new HypersplitNotation([["", ""], ["*3^", ""], ["((3^)^", ") "], ["((3^^)^", ") "]], 3, [3, 3, 3], ...[, , , ,], defaultRound).setName("Hypersplit (Base 3)");
 PresetAssembly.HypersplitBase2 = new HypersplitNotation([["", ""], ["*2^", ""], ["((2^)^", ") "], ["((2^^)^", ") "]], 2, [2, 4, 4], ...[, , , ,], defaultRound).setName("Hypersplit (Base 2)");
@@ -16779,6 +16781,7 @@ let Presets = {
     DoubleBinaryPrefixes: PresetAssembly.DoubleBinaryPrefixes,
     Alphaquint: PresetAssembly.Alphaquint,
     Hypersplit: PresetAssembly.Hypersplit,
+    HypersplitBase4: PresetAssembly.HypersplitBase4,
     HypersplitBase3: PresetAssembly.HypersplitBase3,
     HypersplitBase2: PresetAssembly.HypersplitBase2,
     HyperE: PresetAssembly.HyperE,
@@ -16926,6 +16929,7 @@ let HTMLPresets = {
     DoubleBinaryPrefixes: HTMLPresetAssembly.DoubleBinaryPrefixes,
     Alphaquint: PresetAssembly.Alphaquint,
     Hypersplit: HTMLPresetAssembly.Hypersplit,
+    HypersplitBase4: HTMLPresetAssembly.HypersplitBase4,
     HypersplitBase3: HTMLPresetAssembly.HypersplitBase3,
     HypersplitBase2: HTMLPresetAssembly.HypersplitBase2,
     HyperE: HTMLPresetAssembly.HyperE,

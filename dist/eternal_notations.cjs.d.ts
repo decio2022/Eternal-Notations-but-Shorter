@@ -7336,6 +7336,7 @@ declare let Presets: {
     Hypersplit: Notation;
     HypersplitBase3: Notation;
     HypersplitBase2: Notation;
+    HypersplitBase4: Notation;
     HyperE: Notation;
     Infinity: Notation;
     Eternity: Notation;
@@ -7483,6 +7484,7 @@ declare let HTMLPresets: {
     Hypersplit: Notation;
     HypersplitBase3: Notation;
     HypersplitBase2: Notation;
+    HypersplitBase4: Notation;
     HyperE: Notation;
     Infinity: Notation;
     Eternity: Notation;

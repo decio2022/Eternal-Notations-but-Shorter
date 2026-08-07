@@ -7334,6 +7334,7 @@ declare let Presets: {
     DoubleBinaryPrefixes: Notation;
     Alphaquint: Notation;
     Hypersplit: Notation;
+    HypersplitBase4: Notation;
     HypersplitBase3: Notation;
     HypersplitBase2: Notation;
     HyperE: Notation;
@@ -7481,6 +7482,7 @@ declare let HTMLPresets: {
     DoubleBinaryPrefixes: Notation;
     Alphaquint: Notation;
     Hypersplit: Notation;
+    HypersplitBase4: Notation;
     HypersplitBase3: Notation;
     HypersplitBase2: Notation;
     HyperE: Notation;
